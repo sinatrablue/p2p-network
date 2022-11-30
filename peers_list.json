@@ -1,0 +1,14 @@
+{
+    "peers": [
+        {
+            "id": 0,
+            "ip": "localhost:6788",
+            "status": "Idle"
+        },
+        {
+            "id": 1,
+            "ip": "localhost:6787",
+            "status": "Idle"
+        }
+    ]
+}
