@@ -1,14 +1,32 @@
 {
-    "peers": [
-        {
-            "id": 0,
-            "ip": "localhost:6788",
-            "status": "Idle"
-        },
-        {
-            "id": 1,
-            "ip": "localhost:6787",
-            "status": "Idle"
-        }
-    ]
+  "0": {
+    "id": 0,
+    "ip": "localhost:6788",
+    "status": "Idle"
+  },
+  "1": {
+    "id": 1,
+    "ip": "localhost:6787",
+    "status": "Idle"
+  },
+  "2": {
+    "id": 2,
+    "ip": "localhost:6786",
+    "status": "Idle"
+  },
+  "3": {
+    "id": 2,
+    "ip": "localhost:6786",
+    "status": "Idle"
+  },
+  "4": {
+    "id": 2,
+    "ip": "localhost:6786",
+    "status": "Idle"
+  },
+  "5": {
+    "id": 2,
+    "ip": "localhost:6786",
+    "status": "Idle"
+  }
 }
