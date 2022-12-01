@@ -7,7 +7,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let input_json_peer_file = std::env::args().nth(1).unwrap();
     println!("Input file is <{}>", input_json_peer_file);
     // test values for now, probably command line arg later on
-    /*
+
     let listen_port = 6789;
     let mut target_outgoing_connections = Vec::new();
     let max_incoming_connections = 5;
@@ -16,10 +16,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let max_idle_peers = 5;
     let max_banned_peers = 2;
     let peer_file_dump_interval_seconds = 8;
-    */
+
     // launch network controller
-    let mut net = network::controller::NetworkController::new(input_json_peer_file).await;
-    /*  peers_file,
+    let mut net = network::controller::NetworkController::new(
+        input_json_peer_file,
         listen_port,
         target_outgoing_connections,
         max_incoming_connections,
@@ -28,8 +28,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         max_idle_peers,
         max_banned_peers,
         peer_file_dump_interval_seconds
-    ).await?;*/
-
+    ).await?;
+    //println!("<net> status => {:?}", net.status);
     /*
     loop {
         tokio::select! {

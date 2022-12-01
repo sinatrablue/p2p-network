@@ -8,25 +8,5 @@
     "id": 1,
     "ip": "localhost:6787",
     "status": "Idle"
-  },
-  "2": {
-    "id": 2,
-    "ip": "localhost:6786",
-    "status": "Idle"
-  },
-  "3": {
-    "id": 2,
-    "ip": "localhost:6786",
-    "status": "Idle"
-  },
-  "4": {
-    "id": 2,
-    "ip": "localhost:6786",
-    "status": "Idle"
-  },
-  "5": {
-    "id": 2,
-    "ip": "localhost:6786",
-    "status": "Idle"
   }
 }
