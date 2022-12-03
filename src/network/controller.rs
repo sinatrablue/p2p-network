@@ -1,8 +1,8 @@
-use core::fmt;
 use std::{error::Error, fmt::Display};
 
 use chrono::{DateTime, Utc};
-use json;
+use serde_json::{self, Value};
+use tokio::net::{TcpListener, TcpStream};
 
 pub enum Status {
     Idle,
@@ -14,10 +14,18 @@ pub enum Status {
     Banned
 }
 
+impl Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 pub struct NetworkController {
-    pub status: Status,
+    pub status: Option<Status>,
     pub last_alive: Option<DateTime<Utc>>,
-    pub last_failure: Option<DateTime<Utc>>
+    pub last_failure: Option<DateTime<Utc>>,
+    pub listen_port: u16,
+    peers: serde_json::Value
 }
 
 impl NetworkController {
@@ -34,19 +42,55 @@ impl NetworkController {
     ) -> Result<NetworkController, Box<dyn Error>> {
         println!(".+* Creating NetworkController *+.");
 
-        let mut peers_list = json::parse(
-            std::fs::read_to_string(&peers_file)
+        let peers = serde_json::from_str::<Value>(
+                std::fs::read_to_string(&peers_file)
                 .unwrap()
                 .as_str())
             .unwrap();
             
-        println!("[NetworkController::new] Initial peers list : \n{}", peers_list);
+        println!("[NetworkController::new] Initial peers list : \n{}", serde_json::to_string_pretty(&peers).unwrap());
         
         let net = NetworkController {
-            status: Status::Idle,
+            status: None,
             last_alive: None,
-            last_failure: None
+            last_failure: None,
+            listen_port,
+            peers
         };
         Ok(net)
     }
+
+    pub async fn wait_event(&self) -> Result<TcpStream, Box<dyn Error>> {
+        println!("[NetworkController::wait_event] Lauching wait");
+        let adr_listener = format!("localhost{}", self.listen_port);
+        let listener = TcpListener::bind(adr_listener).await?;
+        
+        let (socket, _) = listener.accept().await?;
+        println!("[NetworkController::wait_event] Accepted !");
+        Ok(socket)
+    }
+
+    pub async fn feedback_peer_alive(&mut self, ip: String) -> Result<(), Box<dyn Error>> {
+        self.peers[&ip]["status"] = Value::String(String::from(Status::InAlive.to_string()));
+        self.peers[&ip]["last_alive"] = Value::String(chrono::offset::Utc::now().to_string());
+        Ok(())
+    }
+
+    pub async fn feedback_peer_failed(&mut self, ip: String) -> Result<(), Box<dyn Error>> {
+        self.peers[&ip]["status"] = Value::String(String::from(Status::Idle.to_string()));
+        self.peers[&ip]["last_alive"] = Value::String(chrono::offset::Utc::now().to_string());
+        Ok(())
+    }
+
+    pub async fn feedback_peer_banned(&mut self, ip: String) -> Result<(), Box<dyn Error>> {
+        self.peers[&ip]["status"] = Value::String(String::from(Status::Banned.to_string()));
+        self.peers[&ip]["last_alive"] = Value::String(chrono::offset::Utc::now().to_string());
+        Ok(())
+    }
+    
+    // pub async fn feedback_peer_failed(&self, ip: String) -> Result<(), Box<dyn Error>> {
+    //     self.peers[ip].status = Status::Idle;
+    //     self.peers[ip].last_failure = chrono::offset::Utc::now();
+    //     Ok(())
+    // }
 }
