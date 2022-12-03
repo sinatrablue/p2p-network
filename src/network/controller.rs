@@ -4,6 +4,9 @@ use chrono::{DateTime, Utc};
 use serde_json::{self, Value};
 use tokio::net::{TcpListener, TcpStream};
 
+#[cfg(test)]
+pub mod tests;
+
 pub enum Status {
     Idle,
     OutConnecting,
@@ -70,21 +73,26 @@ impl NetworkController {
         Ok(socket)
     }
 
-    pub async fn feedback_peer_alive(&mut self, ip: String) -> Result<(), Box<dyn Error>> {
+    pub async fn feedback_peer_alive(&mut self, ip: &String) -> Result<(), Box<dyn Error>> {
         self.peers[&ip]["status"] = Value::String(String::from(Status::InAlive.to_string()));
         self.peers[&ip]["last_alive"] = Value::String(chrono::offset::Utc::now().to_string());
         Ok(())
     }
 
-    pub async fn feedback_peer_failed(&mut self, ip: String) -> Result<(), Box<dyn Error>> {
+    pub async fn feedback_peer_failed(&mut self, ip: &String) -> Result<(), Box<dyn Error>> {
         self.peers[&ip]["status"] = Value::String(String::from(Status::Idle.to_string()));
-        self.peers[&ip]["last_alive"] = Value::String(chrono::offset::Utc::now().to_string());
+        self.peers[&ip]["last_failure"] = Value::String(chrono::offset::Utc::now().to_string());
         Ok(())
     }
 
-    pub async fn feedback_peer_banned(&mut self, ip: String) -> Result<(), Box<dyn Error>> {
+    pub async fn feedback_peer_banned(&mut self, ip: &String) -> Result<(), Box<dyn Error>> {
         self.peers[&ip]["status"] = Value::String(String::from(Status::Banned.to_string()));
-        self.peers[&ip]["last_alive"] = Value::String(chrono::offset::Utc::now().to_string());
+        self.peers[&ip]["last_failure"] = Value::String(chrono::offset::Utc::now().to_string());
+        Ok(())
+    }
+
+    pub async fn feedback_peer_closed(&mut self, ip: &String) -> Result<(), Box<dyn Error>> {
+        self.peers[&ip]["status"] = Value::String(String::from(Status::Idle.to_string()));
         Ok(())
     }
     
