@@ -1,5 +1,5 @@
 pub mod tests {
-    use std::error::Error;
+    use std::{error::Error, collections::HashMap};
 
     use crate::network::controller::NetworkController;
 
@@ -17,10 +17,11 @@ pub mod tests {
      */
     #[tokio::test]
     async fn peer_alive() -> Result<(), Box<dyn Error>> {
+        let map_for_outgoing_connections = HashMap::<String, NetworkController>::new();
         let mut net = NetworkController::new(
             String::from("peers_list.json"),
             8080,
-            Vec::new(),
+            map_for_outgoing_connections,
             5,
             5,
             5,
@@ -34,7 +35,12 @@ pub mod tests {
 
         net.feedback_peer_alive(&ip).await?;
 
-        assert_eq!(net.peers[&ip]["status"], "InAlive");
+        assert_eq!(net.peers.get(&ip)
+            .unwrap()
+            .status.as_ref()
+            .unwrap()
+            .to_string(), "InAlive");
+
         assert!(
             net.last_alive > last_checked_date,
             "Dates were => {}  //  {}",
@@ -45,11 +51,13 @@ pub mod tests {
         Ok(())
     }
 
+    #[tokio::test]
     async fn peer_failed() -> Result<(), Box<dyn Error>> {
+        let map_for_outgoing_connections = HashMap::<String, NetworkController>::new();
         let mut net = NetworkController::new(
             String::from("peers_list.json"),
             8080,
-            Vec::new(),
+            map_for_outgoing_connections,
             5,
             5,
             5,
@@ -63,7 +71,12 @@ pub mod tests {
 
         net.feedback_peer_failed(&ip).await?;
 
-        assert_eq!(net.peers[&ip]["status"], "Idle");
+        assert_eq!(net.peers.get(&ip)
+            .unwrap()
+            .status.as_ref()
+            .unwrap()
+            .to_string(), "Idle");
+            
         assert!(
             net.last_failure > last_checked_date,
             "Dates were => {}  //  {}",
@@ -74,11 +87,13 @@ pub mod tests {
         Ok(())
     }
 
+    #[tokio::test]
     async fn peer_banned() -> Result<(), Box<dyn Error>> {
+        let map_for_outgoing_connections = HashMap::<String, NetworkController>::new();
         let mut net = NetworkController::new(
             String::from("peers_list.json"),
             8080,
-            Vec::new(),
+            map_for_outgoing_connections,
             5,
             5,
             5,
@@ -92,7 +107,12 @@ pub mod tests {
 
         net.feedback_peer_alive(&ip).await?;
 
-        assert_eq!(net.peers[&ip]["status"], "Banned");
+        assert_eq!(net.peers.get(&ip)
+            .unwrap()
+            .status.as_ref()
+            .unwrap()
+            .to_string(), "Banned");
+            
         assert!(
             net.last_failure > last_checked_date,
             "Dates were => {}  //  {}",
@@ -103,11 +123,13 @@ pub mod tests {
         Ok(())
     }
 
+    #[tokio::test]
     async fn peer_closed() -> Result<(), Box<dyn Error>> {
+        let map_for_outgoing_connections = HashMap::<String, NetworkController>::new();
         let mut net = NetworkController::new(
             String::from("peers_list.json"),
             8080,
-            Vec::new(),
+            map_for_outgoing_connections,
             5,
             5,
             5,
@@ -120,8 +142,12 @@ pub mod tests {
 
         net.feedback_peer_alive(&ip).await?;
 
-        assert_eq!(net.peers[&ip]["status"], "Idle");
-
+        assert_eq!(net.peers.get(&ip)
+            .unwrap()
+            .status.as_ref()
+            .unwrap()
+            .to_string(), "Idle");
+            
         Ok(())
     }
 }

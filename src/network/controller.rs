@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display};
+use std::{error::Error, fmt::Display, collections::HashMap};
 
 use chrono::{DateTime, Utc};
 use serde_json::{self, Value};
@@ -28,14 +28,14 @@ pub struct NetworkController {
     pub last_alive: Option<DateTime<Utc>>,
     pub last_failure: Option<DateTime<Utc>>,
     pub listen_port: u16,
-    peers: serde_json::Value
+    peers: HashMap::<String, NetworkController>
 }
 
 impl NetworkController {
     pub async fn new (
         peers_file: String,
         listen_port: u16,
-        target_outgoing_connections: Vec<NetworkController>,
+        target_outgoing_connections: HashMap::<String, NetworkController>,
         max_incoming_connections: u32,
         max_simultaneous_outgoing_connection_attempts: u32,
         max_simultaneous_incoming_connection_attempts: u32,
