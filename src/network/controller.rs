@@ -7,6 +7,7 @@ use tokio::net::{TcpListener, TcpStream};
 #[cfg(test)]
 pub mod tests;
 
+#[derive(Debug, PartialEq)]
 pub enum Status {
     Idle,
     OutConnecting,
@@ -27,14 +28,14 @@ pub struct NetworkController {
     pub status: Option<Status>,
     pub last_alive: Option<DateTime<Utc>>,
     pub last_failure: Option<DateTime<Utc>>,
-    pub listen_port: u16,
+    pub listen_port: i32,
     peers: HashMap::<String, NetworkController>
 }
 
 impl NetworkController {
     pub async fn new (
         peers_file: String,
-        listen_port: u16,
+        listen_port: i32,
         target_outgoing_connections: HashMap::<String, NetworkController>,
         max_incoming_connections: u32,
         max_simultaneous_outgoing_connection_attempts: u32,
@@ -60,6 +61,7 @@ impl NetworkController {
             listen_port,
             peers
         };
+
         Ok(net)
     }
 
