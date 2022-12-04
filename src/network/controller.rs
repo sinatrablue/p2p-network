@@ -4,6 +4,11 @@ use chrono::{DateTime, Utc};
 use serde_json::{self, Value};
 use tokio::{net::{TcpListener, TcpStream}, io::{AsyncWriteExt, AsyncReadExt}};
 
+pub mod NetworkControllerEvent;
+use NetworkControllerEvent::HanshakeStatus;
+
+use crate::network::controller::NetworkControllerEvent::CandidateConnection;
+
 #[cfg(test)]
 pub mod tests;
 
@@ -93,7 +98,7 @@ impl NetworkController {
         Ok(net)
     }
 
-    pub async fn wait_event(&self) -> Result<TcpStream, Box<dyn Error>> {
+    pub async fn wait_event(&self) -> Result<CandidateConnection, Box<dyn Error>> {
         println!("[NetworkController::wait_event] Lauching wait");
         let adr_listener = format!("localhost:{}", self.listen_port);
         let listener = TcpListener::bind(&adr_listener).await?;
@@ -101,10 +106,14 @@ impl NetworkController {
         
         let (socket, _) = listener.accept().await?;
         println!("[NetworkController::wait_event] Accepted !");
-        Ok(socket)
+        Ok(CandidateConnection {
+            ip: socket.peer_addr().unwrap().ip().to_string(),
+            socket: socket,
+            is_outgoing: false
+        })
     }
 
-    pub async fn perform_handshake(ip: String, socket: TcpStream, is_outgoing: bool) -> Result<NetworkControllerEvent, Box<dyn Error>> {
+    pub async fn perform_handshake(ip: String, socket: TcpStream, is_outgoing: bool) -> Result<HanshakeStatus, Box<dyn Error>> {
         let msg_sent = String::from("Welcome to Massa");
         let msg_rcv = String::from("Thanks !");
         if is_outgoing {
@@ -112,13 +121,13 @@ impl NetworkController {
             let mut buf = vec![0; 1024];
             let bits_wrote = stream.write(&msg_sent.as_bytes()).await;
             if bits_wrote.unwrap() != msg_sent.as_bytes().len() {
-                return Ok(NetworkControllerEvent::HandshakeFailure);
+                return Ok(HanshakeStatus::HandshakeFailure);
             }
             stream.read(&mut buf).await?;
             if from_utf8(&buf)? == msg_rcv { 
-                return Ok(NetworkControllerEvent::HandshakeSuccess);
+                return Ok(HanshakeStatus::HandshakeSuccess);
             } else {
-                return Ok(NetworkControllerEvent::HandshakeFailure);
+                return Ok(HanshakeStatus::HandshakeFailure);
             }
         } else {
             tokio::spawn(async move {
@@ -126,18 +135,18 @@ impl NetworkController {
     
                 let sock_read_size = socket.read(&mut buf).await;
                 if sock_read_size.unwrap() == 0 {
-                    return Ok(NetworkControllerEvent::HandshakeFailure);
+                    return Ok(HanshakeStatus::HandshakeFailure);
                 }
                 println!("Received => {}", from_utf8(&buf)?);
 
                 if socket.write_all(&msg_rcv.as_bytes()).await.is_ok() {
-                    return Ok(NetworkControllerEvent::HandshakeSuccess);
+                    return Ok(HanshakeStatus::HandshakeSuccess);
                 } else {
-                    return Ok(NetworkControllerEvent::HandshakeFailure);
+                    return Ok(HanshakeStatus::HandshakeFailure);
                 }
             });
         }
-        return Ok(NetworkControllerEvent::NotSupposedToHappen);
+        return Ok(HanshakeStatus::HandshakeFailure);
     }
 
     pub async fn feedback_peer_alive(&mut self, ip: &String) -> Result<(), Box<dyn Error>> {

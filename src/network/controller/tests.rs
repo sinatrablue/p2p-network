@@ -55,7 +55,7 @@ pub mod tests {
 
         let controller_stream = net.wait_event().await?;
         tokio::spawn(async move {
-            assert!(TcpStream::connect(controller_stream.local_addr().unwrap()).await.is_ok());
+            assert!(TcpStream::connect(format!("{}:{}", controller_stream.ip, 8080)).await.is_ok());
         });
 
         Ok(())
