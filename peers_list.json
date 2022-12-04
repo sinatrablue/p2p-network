@@ -1,12 +1,14 @@
 {
-  "0": {
-    "id": 0,
-    "ip": "localhost:6788",
-    "status": "Idle"
+  "127.0.0.1": {
+    "status": "Idle",
+    "last_alive": "",
+    "last_failure": "",
+    "listen_port": 8081
   },
-  "1": {
-    "id": 1,
-    "ip": "localhost:6787",
-    "status": "Idle"
+  "localhost": {
+    "status": "Idle",
+    "last_alive": "",
+    "last_failure": "",
+    "listen_port": 8082
   }
 }

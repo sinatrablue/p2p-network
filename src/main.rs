@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, collections::HashMap};
 
 mod network;
 
@@ -9,7 +9,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // test values for now, probably command line arg later on
 
     let listen_port = 6789;
-    let mut target_outgoing_connections = Vec::new();
+    let target_outgoing_connections = HashMap::<String, network::controller::NetworkController>::new();
     let max_incoming_connections = 5;
     let max_simultaneous_outgoing_connection_attempts = 5;
     let max_simultaneous_incoming_connection_attempts = 5;
@@ -29,8 +29,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         max_banned_peers,
         peer_file_dump_interval_seconds
     ).await?;
-    //println!("<net> status => {:?}", net.status);
-    /*
+    println!("<net> status => {:?}", net.status);
+
     loop {
         tokio::select! {
             evt = net.wait_event() => match evt {
@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
-    */
+
     Ok(())
 
 }
