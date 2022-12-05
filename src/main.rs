@@ -8,7 +8,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Input file is <{}>", input_json_peer_file);
     // test values for now, probably command line arg later on
 
-    let listen_port = 6789;
+    let listen_port = 8080;
     let target_outgoing_connections = HashMap::<String, network::controller::NetworkController>::new();
     let max_incoming_connections = 5;
     let max_simultaneous_outgoing_connection_attempts = 5;
@@ -35,7 +35,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         tokio::select! {
             evt = net.wait_event() => match evt {
                 Ok(msg) => match msg {
-                    network::controller::NetworkControllerEvent::CandidateConnection {ip, socket, is_outgoing} => {
+                    network::controller::events::NetworkControllerEvent::CandidateConnection {ip, socket, is_outgoing} => {
+                        network::controller::NetworkController::perform_handshake(ip, socket, is_outgoing).await?;
                         // ip is the peer ip, and socket is a tokio TCPStream
                         // triggered when a new TCP connection with a peer is established
                         // is_outgoing is true if our node has connected to the peer node

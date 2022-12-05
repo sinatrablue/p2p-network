@@ -31,3 +31,10 @@ pub async fn basic_tcp_server() -> Result<(), Box<dyn Error>> {
         });
     }
 }
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    basic_tcp_server().await?;
+
+    Ok(())
+}

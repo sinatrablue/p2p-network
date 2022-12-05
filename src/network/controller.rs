@@ -4,11 +4,8 @@ use chrono::{DateTime, Utc};
 use serde_json::{self, Value};
 use tokio::{net::{TcpListener, TcpStream}, io::{AsyncWriteExt, AsyncReadExt}};
 
-pub mod NetworkControllerEvent;
-use NetworkControllerEvent::HanshakeStatus;
-
-use crate::network::controller::NetworkControllerEvent::CandidateConnection;
-
+pub mod events;
+use events::NetworkControllerEvent::{CandidateConnection, HandshakeStatus};
 #[cfg(test)]
 pub mod tests;
 
@@ -108,45 +105,46 @@ impl NetworkController {
         println!("[NetworkController::wait_event] Accepted !");
         Ok(CandidateConnection {
             ip: socket.peer_addr().unwrap().ip().to_string(),
-            socket: socket,
+            socket,
             is_outgoing: false
         })
     }
 
-    pub async fn perform_handshake(ip: String, socket: TcpStream, is_outgoing: bool) -> Result<HanshakeStatus, Box<dyn Error>> {
+    pub async fn perform_handshake(ip: String, mut socket: TcpStream, is_outgoing: bool) -> Result<HandshakeStatus, Box<dyn Error>> {
         let msg_sent = String::from("Welcome to Massa");
         let msg_rcv = String::from("Thanks !");
         if is_outgoing {
             let mut stream = TcpStream::connect(&ip).await?;
+            println!("[NetworkController::perform_handshake] Connected !");
             let mut buf = vec![0; 1024];
             let bits_wrote = stream.write(&msg_sent.as_bytes()).await;
             if bits_wrote.unwrap() != msg_sent.as_bytes().len() {
-                return Ok(HanshakeStatus::HandshakeFailure);
+                return Ok(HandshakeStatus::HandshakeFailure);
             }
+            println!("[NetworkController::perform_handshake] Wrote <{}> bits!", from_utf8(&buf)?);
             stream.read(&mut buf).await?;
+            println!("[NetworkController::perform_handshake] Received response <{}> !", from_utf8(&buf)?);
             if from_utf8(&buf)? == msg_rcv { 
-                return Ok(HanshakeStatus::HandshakeSuccess);
+                return Ok(HandshakeStatus::HandshakeSuccess);
             } else {
-                return Ok(HanshakeStatus::HandshakeFailure);
+                return Ok(HandshakeStatus::HandshakeFailure);
             }
         } else {
-            tokio::spawn(async move {
-                let mut buf = vec![0; 1024];
-    
-                let sock_read_size = socket.read(&mut buf).await;
-                if sock_read_size.unwrap() == 0 {
-                    return Ok(HanshakeStatus::HandshakeFailure);
-                }
-                println!("Received => {}", from_utf8(&buf)?);
+            let mut buf = vec![0; 1024];
 
-                if socket.write_all(&msg_rcv.as_bytes()).await.is_ok() {
-                    return Ok(HanshakeStatus::HandshakeSuccess);
-                } else {
-                    return Ok(HanshakeStatus::HandshakeFailure);
-                }
-            });
+            let sock_read_size = socket.read(&mut buf).await;
+            println!("[NetworkController::perform_handshake] Read <{}>", from_utf8(&buf).unwrap());
+            if sock_read_size.unwrap() == 0 || from_utf8(&buf)?.eq(msg_sent.as_str()) {
+                return Ok(HandshakeStatus::HandshakeFailure);
+            }
+            println!("[NetworkController::perform_handshake] Writing response ...");
+
+            if socket.write_all(&msg_rcv.as_bytes()).await.is_ok() {
+                return Ok(HandshakeStatus::HandshakeSuccess);
+            } else {
+                return Ok(HandshakeStatus::HandshakeFailure);
+            }
         }
-        return Ok(HanshakeStatus::HandshakeFailure);
     }
 
     pub async fn feedback_peer_alive(&mut self, ip: &String) -> Result<(), Box<dyn Error>> {

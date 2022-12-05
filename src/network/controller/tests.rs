@@ -3,7 +3,7 @@ pub mod tests {
 
     use tokio::net::TcpStream;
 
-    use crate::network::controller::NetworkController;
+    use crate::network::controller::{NetworkController, events::NetworkControllerEvent};
 
     /**
      * Don't know really what to test about new()
@@ -60,14 +60,14 @@ pub mod tests {
 
         Ok(())
     }
-/*
+
     /**
      * Try to perform handshake in the good / bad way
      */
     #[tokio::test]
     async fn clean_handshake() -> Result<(), Box<dyn Error>> {
         let map_for_outgoing_connections = HashMap::<String, NetworkController>::new();
-        let mut net = NetworkController::new(
+        let net = NetworkController::new(
             String::from("peers_list.json"),
             8080,
             map_for_outgoing_connections,
@@ -83,7 +83,7 @@ pub mod tests {
             evt = net.wait_event() => match evt {
                 Ok(msg) => match msg {
                     NetworkControllerEvent::CandidateConnection {ip, socket, is_outgoing} => {
-                        assert_eq!(perform_handshake(ip, socket, is_outgoing), NetworkControllerEvent::HandshakeSuccess);
+                        assert_eq!(NetworkController::perform_handshake(ip, socket, is_outgoing).await.unwrap(), NetworkControllerEvent::HandshakeStatus::HandshakeSuccess);
                     }
                 },
                 Err(e) => return Err(e)
@@ -92,7 +92,7 @@ pub mod tests {
 
         Ok(())
     }
-
+/*
     async fn perform_bad_handshake(ip: i32, socket: TcpStream, is_outgoing: bool) -> Result<(), Box<dyn Error>> {
 
         Ok(())
