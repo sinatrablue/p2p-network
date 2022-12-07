@@ -3,7 +3,7 @@ pub mod tests {
 
     use tokio::net::TcpStream;
 
-    use crate::network::controller::{NetworkController, events::NetworkControllerEvent};
+    use crate::network::controller::{NetworkController, events::NetworkControllerEvent, io_json::export_peers_to_json};
 
     /**
      * Don't know really what to test about new()
@@ -262,6 +262,40 @@ pub mod tests {
             .unwrap()
             .to_string(), "Idle");
             
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn json_io_put() -> Result<(), Box<dyn Error>> {
+        let map_for_outgoing_connections = HashMap::<String, NetworkController>::new();
+        let mut net = NetworkController::new(
+            String::from("peers_list.json"),
+            8080,
+            map_for_outgoing_connections,
+            5,
+            5,
+            5,
+            5,
+            2,
+            10)
+        .await?;
+
+        let map_for_outgoing_connections1 = HashMap::<String, NetworkController>::new();
+        let net1 = NetworkController::new(
+            String::from("peers_list.json"),
+            8080,
+            map_for_outgoing_connections1,
+            5,
+            5,
+            5,
+            5,
+            2,
+            10)
+        .await?;
+        
+        net.peers.insert(String::from("localhost:8080"), net1);
+        export_peers_to_json(net.peers, String::from("peers_list.json"))?;
+
         Ok(())
     }
     /*

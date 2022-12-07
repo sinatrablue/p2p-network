@@ -1,9 +1,9 @@
-use std::{error::Error, fmt::Display, collections::HashMap, str::from_utf8};
+use std::{error::Error, fmt::Display, collections::HashMap, str::{from_utf8, FromStr}};
 
 use chrono::{DateTime, Utc};
-use serde_json::{self, Value};
 use tokio::{net::{TcpListener, TcpStream}, io::{AsyncWriteExt, AsyncReadExt}};
 
+pub mod io_json;
 pub mod events;
 use events::NetworkControllerEvent::{CandidateConnection, HandshakeStatus};
 #[cfg(test)]
@@ -18,6 +18,24 @@ pub enum Status {
     InHandshaking,
     InAlive,
     Banned
+}
+
+impl FromStr for Status {
+
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Status, Self::Err> {
+        match input {
+            "Idle"              => Ok(Status::Idle),
+            "OutConnecting"     => Ok(Status::OutConnecting),
+            "OutHandshaking"    => Ok(Status::OutHandshaking),
+            "OutAlive"          => Ok(Status::OutAlive),
+            "InHandshaking"     => Ok(Status::InHandshaking),
+            "InAlive"           => Ok(Status::InAlive),
+            "Banned"            => Ok(Status::Banned),
+            _                   => Err(()),
+        }
+    }
 }
 
 impl Display for Status {
@@ -59,13 +77,6 @@ impl NetworkController {
          * then pass the file + the map which can sound stupid (?)
          * => But is for exports made by NetworkController
          
-        let peers = serde_json::from_str::<Value>(
-                std::fs::read_to_string(&peers_file)
-                .unwrap()
-                .as_str())
-            .unwrap();
-            
-        println!("[NetworkController::new] Initial peers list : \n{}", serde_json::to_string_pretty(&peers).unwrap());
         
         // Convert the JSON object to a HashMap
         // let hash_for_peers = extract_peers_from_json(peers)?;
