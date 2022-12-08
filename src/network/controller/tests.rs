@@ -83,7 +83,7 @@ pub mod tests {
             evt = net.wait_event() => match evt {
                 Ok(msg) => match msg {
                     NetworkControllerEvent::CandidateConnection {ip, socket, is_outgoing} => {
-                        assert_eq!(NetworkController::perform_handshake(ip, socket, is_outgoing).await.unwrap(), NetworkControllerEvent::HandshakeStatus::HandshakeSuccess);
+                        assert_eq!(NetworkController::perform_handshake(&ip, socket, is_outgoing).await.unwrap(), NetworkControllerEvent::HandshakeStatus::HandshakeSuccess);
                     }
                 },
                 Err(e) => return Err(e)

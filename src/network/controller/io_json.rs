@@ -3,7 +3,7 @@ use crate::network::controller::{NetworkController, Status};
 use chrono::{DateTime, Utc};
 use serde_json::{self, Value};
 
-pub fn import_peers_from_json(peers_file: String) -> Result<HashMap::<String, NetworkController>, Box<dyn Error>> {
+pub fn import_peers_from_json(peers_file: &String) -> Result<HashMap::<String, NetworkController>, Box<dyn Error>> {
     let mut computed_map = HashMap::<String, NetworkController>::new();
 
     let peers: HashMap<String, Value> = serde_json::from_str(

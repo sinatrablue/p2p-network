@@ -3,12 +3,6 @@
     "status": "Idle",
     "last_alive": "",
     "last_failure": "",
-    "listen_port": 8081
-  },
-  "localhost": {
-    "status": "Idle",
-    "last_alive": "",
-    "last_failure": "",
-    "listen_port": 8082
+    "listen_port": 8080
   }
 }

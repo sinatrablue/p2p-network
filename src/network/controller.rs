@@ -54,7 +54,7 @@ pub struct NetworkController {
     pub max_simultaneous_incoming_connection_attempts: u32,
     pub max_idle_peers: u32,
     pub max_banned_peers: u32,
-    peers: HashMap::<String, NetworkController>
+    pub peers: HashMap::<String, NetworkController>
 }
 
 impl NetworkController {
@@ -70,17 +70,6 @@ impl NetworkController {
         peer_file_dump_interval_seconds: u16
     ) -> Result<NetworkController, Box<dyn Error>> {
         println!(".+* Creating NetworkController *+.");
-
-        /*
-         * Maybe those lines need to be in main
-         * construct a HashMap based on json content then pass the object
-         * then pass the file + the map which can sound stupid (?)
-         * => But is for exports made by NetworkController
-         
-        
-        // Convert the JSON object to a HashMap
-        // let hash_for_peers = extract_peers_from_json(peers)?;
-        */
 
         let net = NetworkController {
             status: None,
@@ -121,19 +110,19 @@ impl NetworkController {
         })
     }
 
-    pub async fn perform_handshake(ip: String, mut socket: TcpStream, is_outgoing: bool) -> Result<HandshakeStatus, Box<dyn Error>> {
+    pub async fn perform_handshake(ip: &String, mut socket: TcpStream, is_outgoing: bool) -> Result<crate::network::controller::HandshakeStatus, Box<dyn Error>> {
         let msg_sent = String::from("Welcome to Massa");
         let msg_rcv = String::from("Thanks !");
         if is_outgoing {
-            let mut stream = TcpStream::connect(&ip).await?;
-            println!("[NetworkController::perform_handshake] Connected !");
+            //let mut stream = TcpStream::connect(&ip).await?;
+            //println!("[NetworkController::perform_handshake] Connected !");
             let mut buf = vec![0; 1024];
-            let bits_wrote = stream.write(&msg_sent.as_bytes()).await;
+            let bits_wrote = socket.write(&msg_sent.as_bytes()).await;
             if bits_wrote.unwrap() != msg_sent.as_bytes().len() {
                 return Ok(HandshakeStatus::HandshakeFailure);
             }
             println!("[NetworkController::perform_handshake] Wrote <{}> bits!", from_utf8(&buf)?);
-            stream.read(&mut buf).await?;
+            socket.read(&mut buf).await?;
             println!("[NetworkController::perform_handshake] Received response <{}> !", from_utf8(&buf)?);
             if from_utf8(&buf)? == msg_rcv { 
                 return Ok(HandshakeStatus::HandshakeSuccess);
